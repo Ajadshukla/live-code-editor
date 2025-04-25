@@ -5,6 +5,20 @@
   <title>Live Code Editor</title>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg-color: #0f2027;
+      --text-color: #fff;
+      --editor-bg: #1e1e1e;
+      --highlight: #00ffc8;
+    }
+
+    body.light {
+      --bg-color: #f0f0f0;
+      --text-color: #222;
+      --editor-bg: #fff;
+      --highlight: #0066ff;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -13,16 +27,32 @@
 
     body {
       font-family: 'Fira Code', monospace;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #fff;
+      background: var(--bg-color);
+      color: var(--text-color);
       padding: 20px;
+      transition: background 0.3s, color 0.3s;
     }
 
     h1 {
       text-align: center;
+      margin-bottom: 10px;
+      color: var(--highlight);
+    }
+
+    .controls {
+      text-align: center;
       margin-bottom: 20px;
-      color: #00ffc8;
-      text-shadow: 2px 2px #000;
+    }
+
+    button {
+      margin: 0 5px;
+      padding: 8px 12px;
+      background-color: var(--highlight);
+      border: none;
+      border-radius: 5px;
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
     }
 
     .editor-container {
@@ -33,25 +63,25 @@
     }
 
     textarea {
-      background: #1e1e1e;
-      color: #00ff95;
-      border: 1px solid #333;
+      background: var(--editor-bg);
+      color: var(--highlight);
+      border: 1px solid #444;
       padding: 10px;
       border-radius: 8px;
-      height: 250px;
+      height: 200px;
       resize: none;
       font-size: 14px;
       font-family: 'Fira Code', monospace;
-      box-shadow: 0 0 10px #00ffc877;
+      box-shadow: 0 0 10px var(--highlight);
     }
 
     iframe {
       width: 100%;
-      height: 400px;
+      height: 300px;
       border: none;
       background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 0 20px #00ffc833;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #0004;
     }
 
     @media (max-width: 768px) {
@@ -62,12 +92,20 @@
   </style>
 </head>
 <body>
-  <h1>🌈 Live HTML/CSS/JS Editor</h1>
-  <div class="editor-container">
-    <textarea id="html" placeholder="Write HTML here..."></textarea>
-    <textarea id="css" placeholder="Write CSS here..."></textarea>
-    <textarea id="js" placeholder="Write JavaScript here..."></textarea>
+  <h1>🌈 Live Code Editor</h1>
+
+  <div class="controls">
+    <button onclick="toggleTheme()">🌙 Toggle Theme</button>
+    <button onclick="toggleAutoRun()">⚙️ Toggle Auto Run</button>
+    <button onclick="downloadCode()">📥 Download HTML</button>
   </div>
+
+  <div class="editor-container">
+    <textarea id="html" placeholder="Write HTML..."></textarea>
+    <textarea id="css" placeholder="Write CSS..."></textarea>
+    <textarea id="js" placeholder="Write JS..."></textarea>
+  </div>
+
   <iframe id="output"></iframe>
 
   <script>
@@ -75,6 +113,8 @@
     const css = document.getElementById('css');
     const js = document.getElementById('js');
     const output = document.getElementById('output');
+
+    let autoRun = true;
 
     function updateOutput() {
       const source = `
@@ -86,11 +126,51 @@
         </html>
       `;
       output.srcdoc = source;
+
+      // Save to localStorage
+      localStorage.setItem('html', html.value);
+      localStorage.setItem('css', css.value);
+      localStorage.setItem('js', js.value);
     }
 
-    html.addEventListener("input", updateOutput);
-    css.addEventListener("input", updateOutput);
-    js.addEventListener("input", updateOutput);
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+    }
+
+    function toggleAutoRun() {
+      autoRun = !autoRun;
+      alert('Auto Run is now ' + (autoRun ? 'ON' : 'OFF'));
+    }
+
+    function downloadCode() {
+      const code = `
+        <html>
+          <head><style>${css.value}</style></head>
+          <body>${html.value}
+            <script>${js.value}<\/script>
+          </body>
+        </html>
+      `;
+      const blob = new Blob([code], { type: 'text/html' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'code.html';
+      link.click();
+    }
+
+    [html, css, js].forEach(el => {
+      el.addEventListener('input', () => {
+        if (autoRun) updateOutput();
+      });
+    });
+
+    // Load saved code
+    window.onload = () => {
+      html.value = localStorage.getItem('html') || '';
+      css.value = localStorage.getItem('css') || '';
+      js.value = localStorage.getItem('js') || '';
+      updateOutput();
+    };
   </script>
 </body>
 </html>
